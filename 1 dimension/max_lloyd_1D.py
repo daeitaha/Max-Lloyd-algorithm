@@ -51,7 +51,9 @@ def centroid(t1, t2, f):
 # t is an array containing the initial decision thresholds
 # x is an array containing the representation levels
 # error_threshold is the threshold to reach for the algorithm to stop
-def maxlloyd(t, x, f, error_threshold):
+def maxlloyd(input_t, input_x, f, error_threshold):
+    x = 1*input_x
+    t = 1*input_t
     e = MSE(t, x, f)
     error = [e]
     c = 0
@@ -69,10 +71,10 @@ def maxlloyd(t, x, f, error_threshold):
             x[-1] = centroid(t[-1], np.pi, f)
             for i in range(1,len(x)-1):
                 x[i] = centroid(t[i-1], t[i], f)
-        e = MSE(t,x, f)
+        e = MSE(t, x, f)
         error.append(e)
         # print(e)
-    return x,t,error
+    return x, t, error
 
 def moving_average(a, n=3):
     if (len(a.shape)<2):
