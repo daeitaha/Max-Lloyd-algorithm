@@ -44,7 +44,8 @@ def MSE(t, x, f):
 # t1 and t2 are the boundaries of the interval on which the centroid is calculated
 def centroid(t1, t2, f):
     if integrate.quad(f, t1, t2)[0] == 0 or t1 == t2:
-        return 0
+        # return 0
+        return (t1+t2)/2
     else:
         return integrate.quad(lambda t:t*f(t), t1, t2)[0] / integrate.quad(f, t1, t2)[0]
 
@@ -57,12 +58,13 @@ def maxlloyd(input_t, input_x, f, error_threshold):
     e = MSE(t, x, f)
     error = [e]
     c = 0
-    while e > error_threshold and c < 300:
+    while e > error_threshold and c < 10:
         c = c+1
         if c%2 == 1:
             # adjust thresholds
-            for i in range(len(t)):
-                t[i] = 0.5 * ( x[i] + x[i+1] )
+            # for i in range(len(t)):
+            #     t[i] = 0.5 * ( x[i] + x[i+1] )
+            t =  moving_average(x, n=2)
         else:
             # adjust levels
             # x[0] = centroid(-float('Inf'), t[0], f)
@@ -71,8 +73,10 @@ def maxlloyd(input_t, input_x, f, error_threshold):
             x[-1] = centroid(t[-1], np.pi, f)
             for i in range(1,len(x)-1):
                 x[i] = centroid(t[i-1], t[i], f)
-        e = MSE(t, x, f)
-        error.append(e)
+            e = MSE(t, x, f)
+            error.append(e)
+            if ((error[-1]/error[-2])>0.8):
+                break
         # print(e)
     return x, t, error
 
