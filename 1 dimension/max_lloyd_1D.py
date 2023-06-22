@@ -48,6 +48,24 @@ def centroid(t1, t2, f):
         return (t1+t2)/2
     else:
         return integrate.quad(lambda t:t*f(t), t1, t2)[0] / integrate.quad(f, t1, t2)[0]
+    
+    
+def centroid_paralel(t, f):
+    y = f(t)
+    num_int     = np.diff(integrate.cumulative_trapezoid(y*t, t, initial=0))
+    denum_int   = np.diff(integrate.cumulative_trapezoid(y, t, initial=0))
+    output = num_int/denum_int
+    idx1 = np.where(denum_int==0)[0]
+    idx2 = np.unique(np.concatenate((idx1, idx1+1)))
+    output[idx1] = moving_average(t[idx2], n=2).squeeze()
+    
+    return output
+
+    # if integrate.quad(f, t1, t2)[0] == 0 or t1 == t2:
+    #     # return 0
+    #     return (t1+t2)/2
+    # else:
+    #     return integrate.quad(lambda t:t*f(t), t1, t2)[0] / integrate.quad(f, t1, t2)[0]
 
 # t is an array containing the initial decision thresholds
 # x is an array containing the representation levels
@@ -73,6 +91,12 @@ def maxlloyd(input_t, input_x, f, error_threshold):
             x[-1] = centroid(t[-1], np.pi, f)
             for i in range(1,len(x)-1):
                 x[i] = centroid(t[i-1], t[i], f)
+            
+
+            # x = centroid_paralel(np.concatenate((np.array([-np.pi]),t.squeeze(),np.array([np.pi]))), f)
+
+                
+            
             e = MSE(t, x, f)
             error.append(e)
             if ((error[-1]/error[-2])>0.8):
