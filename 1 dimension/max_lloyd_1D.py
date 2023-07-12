@@ -68,7 +68,7 @@ def centroid(t1, t2, f):
 def fast_centroid_paralel(f, thresholds, n_int=1000):
     n_th           = thresholds.size
     grid           = np.linspace(thresholds[np.arange(n_th-1)],thresholds[np.arange(n_th-1)+1],n_int)
-    delta          =  grid[1,0]-grid[0,0]
+    delta          =  grid[1,:]-grid[0,:]
     f_grid         = f(grid)
     f_grid[1:-1,:] = 2*f_grid[1:-1,:]
     
@@ -109,28 +109,31 @@ def maxlloyd(input_t, input_x, f, error_threshold):
     error = [e]
     c = 0
     while e > error_threshold and c < 10:
+        
         c = c+1
-        if c%2 == 1:
-            t =  moving_average(x, n=2)
-        else:
-            # adjust levels
-            tt = time.time()
-            x[0] = centroid(-np.pi, t[0], f)
-            x[-1] = centroid(t[-1], np.pi, f)
-            for i in range(1,len(x)-1):
-                x[i] = centroid(t[i-1], t[i], f)
-            print('original time:%.4f'%(time.time()-tt))
-            
-            tt = time.time()
-            x = fast_centroid_paralel(f, np.concatenate((np.array([-np.pi]),t.squeeze(),np.array([np.pi]))))
-            print('New time:%.4f'%(time.time()-tt))
+        t =  moving_average(x, n=2)
+        # if c%2 == 1:
+        #     t =  moving_average(x, n=2)
+        # else:
+        # # adjust levels
+        # tt = time.time()
+        # x[0] = centroid(-np.pi, t[0], f)
+        # x[-1] = centroid(t[-1], np.pi, f)
+        # for i in range(1,len(x)-1):
+        #     x[i] = centroid(t[i-1], t[i], f)
+        # print('original time:%.4f'%(time.time()-tt))
+        # x_tmp = x
+        
+        # tt = time.time()
+        x = fast_centroid_paralel(f, np.concatenate((np.array([-np.pi]),t.squeeze(),np.array([np.pi]))),n_int=1000)
+        # print('New time:%.4f'%(time.time()-tt))
 
-                
             
-            e = MSE(t, x, f)
-            error.append(e)
-            if ((error[-1]/error[-2])>0.8):
-                break
+        
+        e = MSE(t, x, f)
+        error.append(e)
+        if ((error[-1]/error[-2])>0.8):
+            break
         # print(e)
     return x, t, error
 
