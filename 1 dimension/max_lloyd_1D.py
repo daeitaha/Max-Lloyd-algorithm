@@ -8,6 +8,7 @@ import scipy
 import matplotlib.pyplot as plt
 from scipy import integrate
 import numpy as np
+import time
 
 
 
@@ -29,6 +30,20 @@ import numpy as np
 #     return random.uniform(-1,1)
 #     #return random.gauss(0,1)
 
+def trapezoid_fast_integral(f, thresholds, n_int=1000):
+    n_th = thresholds.size
+    grid = np.linspace(thresholds[np.arange(n_th-1)],thresholds[np.arange(n_th-1)+1],n_int)
+    delta =  grid[1,0]-grid[0,0]
+    f_grid = f(grid)
+    f_grid[1:-1,:] = 2*f_grid[1:-1,:]
+    integration = np.sum(f_grid*delta/2,axis=0)
+    
+    return integration
+    
+# f = lambda x: x**2
+# thresholds = np.arange(10)
+# y = trapezoid_fast_integral(f, thresholds, n_int=1000)
+
 # computes MSE between 2 adjacent decision thresholds (on one segment)
 def interval_MSE(x, t1, t2, f):
     return integrate.quad(lambda t: ((t - x)**2) * f(t), t1, t2)[0]
@@ -49,8 +64,25 @@ def centroid(t1, t2, f):
     else:
         return integrate.quad(lambda t:t*f(t), t1, t2)[0] / integrate.quad(f, t1, t2)[0]
     
+
+def fast_centroid_paralel(f, thresholds, n_int=1000):
+    n_th           = thresholds.size
+    grid           = np.linspace(thresholds[np.arange(n_th-1)],thresholds[np.arange(n_th-1)+1],n_int)
+    delta          =  grid[1,0]-grid[0,0]
+    f_grid         = f(grid)
+    f_grid[1:-1,:] = 2*f_grid[1:-1,:]
     
-def centroid_paralel(t, f):
+    num_int     = np.sum(f_grid*grid*delta/2,axis=0)
+    denum_int   = np.sum(f_grid*delta/2,axis=0)
+    
+    output       = num_int/denum_int
+    idx1         = np.where(denum_int==0)[0]
+    idx2         = np.unique(np.concatenate((idx1, idx1+1)))
+    output[idx1] = moving_average(thresholds[idx2], n=2).squeeze()
+    
+    return output
+
+def centroid_paralel(f, t):
     y = f(t)
     num_int     = np.diff(integrate.cumulative_trapezoid(y*t, t, initial=0))
     denum_int   = np.diff(integrate.cumulative_trapezoid(y, t, initial=0))
@@ -79,21 +111,19 @@ def maxlloyd(input_t, input_x, f, error_threshold):
     while e > error_threshold and c < 10:
         c = c+1
         if c%2 == 1:
-            # adjust thresholds
-            # for i in range(len(t)):
-            #     t[i] = 0.5 * ( x[i] + x[i+1] )
             t =  moving_average(x, n=2)
         else:
             # adjust levels
-            # x[0] = centroid(-float('Inf'), t[0], f)
+            tt = time.time()
             x[0] = centroid(-np.pi, t[0], f)
-            # x[-1] = centroid(t[-1], float('Inf'), f)
             x[-1] = centroid(t[-1], np.pi, f)
             for i in range(1,len(x)-1):
                 x[i] = centroid(t[i-1], t[i], f)
+            print('original time:%.4f'%(time.time()-tt))
             
-
-            # x = centroid_paralel(np.concatenate((np.array([-np.pi]),t.squeeze(),np.array([np.pi]))), f)
+            tt = time.time()
+            x = fast_centroid_paralel(f, np.concatenate((np.array([-np.pi]),t.squeeze(),np.array([np.pi]))))
+            print('New time:%.4f'%(time.time()-tt))
 
                 
             
