@@ -45,81 +45,81 @@ import torch
 # y = trapezoid_fast_integral(f, thresholds, n_int=1000)
 
 # computes MSE between 2 adjacent decision thresholds (on one segment)
-# def interval_MSE(x, t1, t2, f):
-#     return integrate.quad(lambda t: ((t - x)**2) * f(t), t1, t2)[0]
+def interval_MSE(x, t1, t2, f):
+    return integrate.quad(lambda t: ((t - x)**2) * f(t), t1, t2)[0]
 
-# # computes mean squared error on R
-# def MSE(t, x, f):
-#     # s = interval_MSE(x[0], -float('Inf'), t[0], f) + interval_MSE(x[-1], t[-1], float('Inf'), f)
-#     s = interval_MSE(x[0], -np.pi, t[0], f) + interval_MSE(x[-1], t[-1], np.pi, f)
-#     for i in range(1,len(x)-1):
-#         s = s + interval_MSE(x[i], t[i-1], t[i], f)
-#     return s
+# computes mean squared error on R
+def MSE(t, x, f):
+    # s = interval_MSE(x[0], -float('Inf'), t[0], f) + interval_MSE(x[-1], t[-1], float('Inf'), f)
+    s = interval_MSE(x[0], -np.pi, t[0], f) + interval_MSE(x[-1], t[-1], np.pi, f)
+    for i in range(1,len(x)-1):
+        s = s + interval_MSE(x[i], t[i-1], t[i], f)
+    return s
 
-# # t1 and t2 are the boundaries of the interval on which the centroid is calculated
-# def centroid(t1, t2, f):
-#     if integrate.quad(f, t1, t2)[0] == 0 or t1 == t2:
-#         # return 0
-#         return (t1+t2)/2
-#     else:
-#         return integrate.quad(lambda t:t*f(t), t1, t2)[0] / integrate.quad(f, t1, t2)[0]
+# t1 and t2 are the boundaries of the interval on which the centroid is calculated
+def centroid(t1, t2, f):
+    if integrate.quad(f, t1, t2)[0] == 0 or t1 == t2:
+        # return 0
+        return (t1+t2)/2
+    else:
+        return integrate.quad(lambda t:t*f(t), t1, t2)[0] / integrate.quad(f, t1, t2)[0]
     
-def quantization_error_calc(f, x , thresholds, n_int=1000):
-    n_th           = thresholds.size
-    grid           = np.linspace(thresholds[np.arange(n_th-1)],thresholds[np.arange(n_th-1)+1],n_int)
-    delta          =  grid[1,:]-grid[0,:]
-    f_grid         = f(grid)
-    f_grid[1:-1,:] = 2*f_grid[1:-1,:]
-    error          = np.sum(f_grid*((grid-x)**2)*delta/2)
-    return error
-
-
-def quantization_error_calc_torch(f, x , thresholds, n_int=1000):
-    device         = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    n_th           = thresholds.size
-    grid           = torch.linspace(thresholds[np.arange(n_th-1)],thresholds[np.arange(n_th-1)+1],n_int, device=device)
-    delta          =  grid[1,:]-grid[0,:]
-    f_grid         = f(grid)
-    f_grid[1:-1,:] = 2*f_grid[1:-1,:]
-    error          = torch.sum(f_grid*((grid-x)**2)*delta/2) 
-    return error
-
-def centroid_calc(f, thresholds, n_int=1000):
-    n_th           = thresholds.size
-    grid           = np.linspace(thresholds[np.arange(n_th-1)],thresholds[np.arange(n_th-1)+1],n_int)
-    delta          =  grid[1,:]-grid[0,:]
-    f_grid         = f(grid)
-    f_grid[1:-1,:] = 2*f_grid[1:-1,:]
-    
-    num_int     = np.sum(f_grid*grid*delta/2,axis=0)
-    denum_int   = np.sum(f_grid*delta/2,axis=0)
-    
-    x      = num_int/denum_int
-    idx    = np.where(denum_int==0)[0]
-    x[idx] = (thresholds[idx] + thresholds[idx+1])/2
-    
-    error   = np.sum(f_grid*((grid-x)**2)*delta/2) 
-    
-    return x, error
+# def quantization_error_calc(f, x , thresholds, n_int=1000):
+#     n_th           = thresholds.size
+#     grid           = np.linspace(thresholds[np.arange(n_th-1)],thresholds[np.arange(n_th-1)+1],n_int)
+#     delta          =  grid[1,:]-grid[0,:]
+#     f_grid         = f(grid)
+#     f_grid[1:-1,:] = 2*f_grid[1:-1,:]
+#     error          = np.sum(f_grid*((grid-x)**2)*delta/2)
+#     return error
 
 
-def centroid_calc_torch(f, thresholds, n_int=1000):
-    device         = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    n_th           = thresholds.size
-    grid           = torch.linspace(thresholds[np.arange(n_th-1)],thresholds[np.arange(n_th-1)+1],n_int, device=device)
-    delta          =  grid[1,:]-grid[0,:]
-    f_grid         = f(grid)
-    f_grid[1:-1,:] = 2*f_grid[1:-1,:]
+# def quantization_error_calc_torch(f, x , thresholds, n_int=1000):
+#     device         = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+#     n_th           = thresholds.size
+#     grid           = torch.linspace(thresholds[np.arange(n_th-1)],thresholds[np.arange(n_th-1)+1],n_int, device=device)
+#     delta          =  grid[1,:]-grid[0,:]
+#     f_grid         = f(grid)
+#     f_grid[1:-1,:] = 2*f_grid[1:-1,:]
+#     error          = torch.sum(f_grid*((grid-x)**2)*delta/2) 
+#     return error
+
+# def centroid_calc(f, thresholds, n_int=1000):
+#     n_th           = thresholds.size
+#     grid           = np.linspace(thresholds[np.arange(n_th-1)],thresholds[np.arange(n_th-1)+1],n_int)
+#     delta          =  grid[1,:]-grid[0,:]
+#     f_grid         = f(grid)
+#     f_grid[1:-1,:] = 2*f_grid[1:-1,:]
     
-    num_int     = torch.sum(f_grid*grid*delta/2,axis=0)
-    denum_int   = torch.sum(f_grid*delta/2,axis=0)
+#     num_int     = np.sum(f_grid*grid*delta/2,axis=0)
+#     denum_int   = np.sum(f_grid*delta/2,axis=0)
     
-    x      = num_int/denum_int
-    idx    = torch.where(denum_int==0)[0]
-    x[idx] = (thresholds[idx] + thresholds[idx+1])/2
-    error  = torch.sum(f_grid*((grid-x)**2)*delta/2) 
+#     x      = num_int/denum_int
+#     idx    = np.where(denum_int==0)[0]
+#     x[idx] = (thresholds[idx] + thresholds[idx+1])/2
     
-    return x, error
+#     error   = np.sum(f_grid*((grid-x)**2)*delta/2) 
+    
+#     return x, error
+
+
+# def centroid_calc_torch(f, thresholds, n_int=1000):
+#     device         = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+#     n_th           = thresholds.size
+#     grid           = torch.linspace(thresholds[np.arange(n_th-1)],thresholds[np.arange(n_th-1)+1],n_int, device=device)
+#     delta          =  grid[1,:]-grid[0,:]
+#     f_grid         = f(grid)
+#     f_grid[1:-1,:] = 2*f_grid[1:-1,:]
+    
+#     num_int     = torch.sum(f_grid*grid*delta/2,axis=0)
+#     denum_int   = torch.sum(f_grid*delta/2,axis=0)
+    
+#     x      = num_int/denum_int
+#     idx    = torch.where(denum_int==0)[0]
+#     x[idx] = (thresholds[idx] + thresholds[idx+1])/2
+#     error  = torch.sum(f_grid*((grid-x)**2)*delta/2) 
+    
+#     return x, error
 
 # def centroid_paralel(f, t):
 #     y = f(t)
@@ -138,39 +138,48 @@ def centroid_calc_torch(f, thresholds, n_int=1000):
 #     # else:
 #     #     return integrate.quad(lambda t:t*f(t), t1, t2)[0] / integrate.quad(f, t1, t2)[0]
 
-# t is an array containing the initial decision thresholds
-# x is an array containing the representation levels
-# error_threshold is the threshold to reach for the algorithm to stop
-def maxlloyd_torch(input_t, input_x, f, error_threshold, max_iter=10):
-    device  = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    x       = 1*input_x
-    t       = 1*input_t
-    e       = quantization_error_calc_torch(f, x , t, n_int=1000)
-    error   = [e]
-    c       = 0
-    while e > error_threshold and c < max_iter:
-        c       = c+1
-        t       =  moving_average_torch(x, n=2)
-        x, e    = centroid_calc_torch(f, torch.concatenate((torch.tensor([-torch.pi]),t.squeeze(),torch.tensor([torch.pi]))),n_int=1000)
-        error.append(e)
-        if ((error[-1]/error[-2])>0.8):
-            break
-    return x, t, error
+# # t is an array containing the initial decision thresholds
+# # x is an array containing the representation levels
+# # error_threshold is the threshold to reach for the algorithm to stop
+# def maxlloyd_torch(input_t, input_x, f, error_threshold, max_iter=10):
+#     device  = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+#     x       = 1*input_x
+#     t       = 1*input_t
+#     e       = quantization_error_calc_torch(f, x , t, n_int=1000)
+#     error   = [e]
+#     c       = 0
+#     while e > error_threshold and c < max_iter:
+#         c       = c+1
+#         t       =  moving_average_torch(x, n=2)
+#         x, e    = centroid_calc_torch(f, torch.concatenate((torch.tensor([-torch.pi]),t.squeeze(),torch.tensor([torch.pi]))),n_int=1000)
+#         error.append(e)
+#         if ((error[-1]/error[-2])>0.8):
+#             break
+#     return x, t, error
 
 
-def maxlloyd(input_t, input_x, f, error_threshold, max_iter=10):
+def maxlloyd_orig(input_t, input_x, f, error_threshold, max_iter=10):
     x       = 1*input_x
     t       = 1*input_t
-    e       = quantization_error_calc(f, x , t, n_int=1000)
+    e       = MSE(t, x, f)
     error   = [e]
     c       = 0
     while e > error_threshold and c < max_iter:
         
-        c    = c+1
-        t    =  moving_average(x, n=2)
-        x, e = centroid_calc(f, np.concatenate((np.array([-np.pi]),t.squeeze(),np.array([np.pi]))),n_int=1000)
+        c = c+1
+        if c%2 == 1:
+            # adjust thresholds
+            for i in range(len(t)):
+                t[i] = 0.5 * ( x[i] + x[i+1] )
+        else:
+            # adjust levels
+            x[0] = centroid(-np.pi, t[0], f)
+            x[-1] = centroid(t[-1], np.pi, f)
+            for i in range(1,len(x)-1):
+                x[i] = centroid(t[i-1], t[i], f)
+        e = MSE(t, x, f)
         error.append(e)
-        if ((error[-1]/error[-2])>0.8):
+        if (((error[-1]/error[-2])>0.8) & (c>1)):
             break
     return x, t, error
 
