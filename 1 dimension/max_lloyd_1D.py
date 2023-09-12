@@ -1,4 +1,5 @@
 
+
 # Max-Lloyd algorithm for finding the optimal quantizer
 # in dimension 1
 
@@ -52,7 +53,7 @@ def centroid(t1, t2, f):
 # t is an array containing the initial decision thresholds
 # x is an array containing the representation levels
 # error_threshold is the threshold to reach for the algorithm to stop
-def maxlloyd(input_t, input_x, f, error_threshold):
+def maxlloyd_orig(input_t, input_x, f, error_threshold):
     x = 1*input_x
     t = 1*input_t
     e = MSE(t, x, f)
@@ -89,72 +90,6 @@ def moving_average(a, n=3):
         ret = np.cumsum(a, dtype=np.float64, axis=0)
     ret[n:,:] = ret[n:,:] - ret[:-n,:]
     return ret[n - 1:,:] / n
-
-# k = 10
-# mu = 0
-# f = lambda t: k*np.cos(t-mu)
-
-# # Test of maxlloyd function
-# def test_maxlloyd():
-#     # t = [-0.5,0,0.5]
-#     # print(t)
-#     # x = [-1,0,1,1.5]
-#     x = np.arange(-30,31)/60*2*np.pi
-#     t = moving_average(x,n=2)
-#     print(t)
-#     # mu = 0
-#     # sigma = 1
-#     # f = lambda t: np.exp(-(t-mu)**2/(2*sigma**2))/np.sqrt(2*np.pi*sigma**2)
-
-    
-#     x2,t2,error = maxlloyd(t, x, f, 0.001)
-#     # print(x2,t2)
-#     plt.plot(error)
-#     plt.show()
-#     print(t2)
-#     return x2,t2
-
-# x2,t2 = test_maxlloyd()
-# x = np.arange(-30,31)/60*2*np.pi
-# t = moving_average(x,n=2)
-# plt.plot(x,f(x)/2/np.pi/np.i0(k),'-ro')
-# plt.show()
-# plt.plot(x2,f(x2)/2/np.pi/np.i0(k),'-bo')
-# plt.show()
-# x2 = np.array(x2).squeeze()
-# print(np.abs(np.diff(x2)))
-
-# def estimate(x,t,value):
-#     for i in range(len(t)):
-#         if t[i] > value:
-#             return x[i]
-#     return x[-1]
-
-# # Plot of average error
-# def plot_avg_error(N):
-#     x,t = test_maxlloyd()
-#     avg_E = []
-#     realizations = []
-#     square_error = []
-#     for i in range(N):
-#         realizations.append(random_distrib())
-#         square_error.append((realizations[-1] - estimate(x,t,realizations[-1]))**2)
-#         avg_E.append(sum(square_error)/len(square_error))
-#     plt.figure(2)
-#     plt.plot(avg_E)
-#     plt.show()
-
-# plot_avg_error(20000)
-
-
-
-
-
-
-
-
-
-
 
 
 
